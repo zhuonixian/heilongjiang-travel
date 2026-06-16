@@ -1,0 +1,322 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { destinations, itinerary } from '@data/itinerary';
+
+// 行程分布图颜色映射（5 个目的地各一色）
+const palette = [
+  { slug: 'wudalianchi', color: '#1a3a3a', name: '五大连池' }, // 墨绿
+  { slug: 'jiayin', color: '#1e3a5f', name: '嘉荫' }, // 深蓝
+  { slug: 'yichun', color: '#c9a961', name: '伊春林都' }, // 黄铜金
+  { slug: 'heihe', color: '#6b6258', name: '黑河' }, // 暖灰
+  { slug: 'harbin', color: '#8a5a3b', name: '哈尔滨' }, // 棕
+];
+const colorOf = (slug: string) => palette.find((p) => p.slug === slug)?.color ?? '#1a3a3a';
+const nameOf = (slug: string) => palette.find((p) => p.slug === slug)?.name ?? '';
+
+// 为每一天找到归属的目的地
+const dayDestination: Record<number, string> = {};
+destinations.forEach((d) => {
+  d.days.forEach((day) => {
+    dayDestination[day] = d.slug;
+  });
+});
+const totalDays = 13;
+const allDays = Array.from({ length: totalDays }, (_, i) => i + 1);
+
+// 顶部 banner 微缩标签
+const miniTags = destinations.map((d, i) => ({
+  no: String(i + 1).padStart(2, '0'),
+  name: d.name,
+  region: d.region,
+}));
+
+const heroSummary = destinations.map((d) => d.highlights.length).reduce((a, b) => a + b, 0);
+---
+
+<BaseLayout
+  title="目的地专题 · 黑蒙吉 · 旅"
+  description="五大目的地，五种东北——五大连池火山秘境、嘉荫恐龙王国、伊春林都氧吧、黑河中俄界江、哈尔滨东方莫斯科。"
+>
+  <!-- ============ Banner ============ -->
+  <section class="relative bg-ink-deep text-cream overflow-hidden" style="height: 420px;">
+    <!-- 装饰：黄铜金几何线条 -->
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute top-0 right-0 w-1/2 h-full opacity-20">
+        <svg viewBox="0 0 600 420" preserveAspectRatio="none" class="w-full h-full">
+          <line x1="0" y1="60" x2="600" y2="60" stroke="#c9a961" stroke-width="0.5" />
+          <line x1="0" y1="360" x2="600" y2="360" stroke="#c9a961" stroke-width="0.5" />
+          <line x1="100" y1="0" x2="100" y2="420" stroke="#c9a961" stroke-width="0.3" />
+          <line x1="500" y1="0" x2="500" y2="420" stroke="#c9a961" stroke-width="0.3" />
+          <circle cx="500" cy="60" r="4" fill="#c9a961" />
+          <circle cx="100" cy="360" r="4" fill="#c9a961" />
+          <line x1="100" y1="360" x2="500" y2="60" stroke="#c9a961" stroke-width="0.4" stroke-dasharray="2,6" />
+        </svg>
+      </div>
+      <div class="absolute left-10 top-10 w-12 h-12 border-l border-t border-brass/40"></div>
+      <div class="absolute right-10 bottom-10 w-12 h-12 border-r border-b border-brass/40"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-6 lg:px-10 h-full flex flex-col justify-center pt-20">
+      <div class="max-w-3xl">
+        <div class="flex items-center gap-4 mb-5">
+          <span class="w-12 h-px bg-brass"></span>
+          <span class="text-brass text-xs tracking-[0.4em] uppercase font-sans">Destinations · 目的地</span>
+        </div>
+        <h1 class="font-serif text-4xl md:text-5xl lg:text-6xl leading-tight mb-5">
+          五大目的地，<span class="text-brass italic">五种东北</span>
+        </h1>
+        <p class="font-serif text-base md:text-lg text-cream/75 leading-relaxed max-w-2xl">
+          从世界地质公园到中俄边境，从红松林海到神州恐龙故乡。13 天的旅程，每一段都有专属的风景。
+        </p>
+      </div>
+
+      <!-- 微缩标签条 -->
+      <div class="absolute bottom-0 left-0 right-0 border-t border-brass/20 bg-ink-deep/60 backdrop-blur-sm">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10 py-4 flex flex-wrap items-center gap-x-8 gap-y-2">
+          {miniTags.map((tag, i) => (
+            <a
+              href={`/destinations/${destinations[i].slug}`}
+              class="group flex items-baseline gap-2 text-cream/80 hover:text-brass transition-colors"
+            >
+              <span class="text-brass font-serif text-sm">{tag.no}</span>
+              <span class="font-serif text-sm tracking-wide">{tag.name}</span>
+              <span class="text-[10px] tracking-[0.2em] uppercase text-cream/40 group-hover:text-brass/60">{tag.region}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 目的地列表 ============ -->
+  <section class="py-20 lg:py-28 parchment-bg">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+      <div class="mb-16 lg:mb-24 max-w-2xl">
+        <span class="label-eyebrow">Featured · 五处秘境</span>
+        <h2 class="font-serif text-3xl md:text-4xl text-ink mt-2 leading-tight">
+          一段旅程，<span class="italic text-brass-dark">五段故事</span>
+        </h2>
+        <div class="brass-rule mt-6"></div>
+      </div>
+
+      <div class="space-y-20 lg:space-y-28">
+        {destinations.map((d, idx) => {
+          const reverse = idx % 2 === 1;
+          const no = String(idx + 1).padStart(2, '0');
+          const summary = d.description.length > 110 ? d.description.slice(0, 108) + '…' : d.description;
+          return (
+            <article
+              class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center group"
+            >
+              {/* 图片 */}
+              <a
+                href={`/destinations/${d.slug}`}
+                class={`lg:col-span-7 block relative ${reverse ? 'lg:order-2' : ''}`}
+              >
+                <div class="relative overflow-hidden rounded-sm card-shadow card-shadow-hover">
+                  <div class="aspect-[4/3] overflow-hidden">
+                    <img
+                      src={d.hero}
+                      alt={d.name}
+                      loading="lazy"
+                      class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  </div>
+                  {/* 图上装饰 */}
+                  <div class="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-ink-deep/70 backdrop-blur-sm rounded-sm">
+                    <span class="text-brass font-serif text-xs">{no}</span>
+                    <span class="text-cream text-[10px] tracking-[0.25em] uppercase">{d.region}</span>
+                  </div>
+                  <div class="absolute bottom-0 right-0 w-24 h-24 border-b-2 border-r-2 border-brass/0 group-hover:border-brass/60 transition-colors duration-500"></div>
+                </div>
+              </a>
+
+              {/* 内容 */}
+              <div class={`lg:col-span-5 ${reverse ? 'lg:order-1 lg:pr-6' : 'lg:pl-6'}`}>
+                <div class="flex items-baseline gap-4 mb-3">
+                  <span class="font-serif text-brass text-5xl lg:text-6xl leading-none">{no}</span>
+                  <div>
+                    <span class="label-eyebrow !mb-0 block">{d.region}</span>
+                  </div>
+                </div>
+                <h3 class="font-serif text-3xl lg:text-4xl text-ink leading-tight mb-2">{d.name}</h3>
+                <p class="font-serif italic text-stone text-lg mb-3">{d.subtitle}</p>
+                <p class="font-serif italic text-brass-dark text-sm mb-5 leading-relaxed">
+                  {d.tagline}
+                </p>
+                <p class="text-stone text-[15px] leading-[1.85] mb-6 font-sans">
+                  {summary}
+                </p>
+
+                {/* highlights 标签 */}
+                <div class="flex flex-wrap gap-2 mb-6">
+                  {d.highlights.slice(0, 4).map((h) => (
+                    <span class="px-3 py-1 text-[11px] tracking-wide border border-stone/30 text-stone rounded-sm bg-cream-deep/40">
+                      {h}
+                    </span>
+                  ))}
+                </div>
+
+                {/* bottom row */}
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-2 pt-5 border-t border-stone/15 text-xs text-stone-light">
+                  <span class="flex items-center gap-1.5">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                      <circle cx="12" cy="12" r="4" />
+                    </svg>
+                    <span class="tracking-wide">{d.bestSeason}</span>
+                  </span>
+                  <span class="flex items-center gap-1.5">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <rect x="3" y="5" width="18" height="16" rx="1" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                      <line x1="8" y1="3" x2="8" y2="7" />
+                      <line x1="16" y1="3" x2="16" y2="7" />
+                    </svg>
+                    <span class="tracking-wide">Day {d.days.join(' / ')}</span>
+                  </span>
+                  <a
+                    href={`/destinations/${d.slug}`}
+                    class="ml-auto inline-flex items-center gap-2 text-brass-dark hover:text-brass font-serif text-sm group/cta"
+                  >
+                    <span>查看专题</span>
+                    <span class="transition-transform group-hover/cta:translate-x-1">→</span>
+                  </a>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 行程分布可视化 ============ -->
+  <section class="py-20 lg:py-24 bg-ink-deep text-cream relative overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none opacity-10">
+      <div class="absolute top-0 left-0 w-full h-px bg-brass"></div>
+      <div class="absolute bottom-0 left-0 w-full h-px bg-brass"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-6 lg:px-10">
+      <div class="mb-12 max-w-2xl">
+        <span class="label-eyebrow !text-brass">Timeline · 行程分布</span>
+        <h2 class="font-serif text-3xl md:text-4xl mt-2 leading-tight">
+          13 天的脉络，<span class="italic text-brass">5 段色块</span>
+        </h2>
+        <p class="text-cream/60 text-sm mt-4 leading-relaxed">
+          鼠标悬停色块查看对应目的地。从哈尔滨启程，沿小兴安岭与黑龙江一路北上，再南返中俄边境重镇。
+        </p>
+      </div>
+
+      <div
+        x-data="{ hover: null, days: [
+          {day: 1, name: '五大连池', color: '#1a3a3a'},
+          {day: 2, name: '五大连池', color: '#1a3a3a'},
+          {day: 3, name: '五大连池', color: '#1a3a3a'},
+          {day: 4, name: '嘉荫', color: '#1e3a5f'},
+          {day: 5, name: '嘉荫', color: '#1e3a5f'},
+          {day: 6, name: '嘉荫', color: '#1e3a5f'},
+          {day: 7, name: '伊春林都', color: '#c9a961'},
+          {day: 8, name: '伊春林都', color: '#c9a961'},
+          {day: 9, name: '伊春林都', color: '#c9a961'},
+          {day: 10, name: '伊春林都', color: '#c9a961'},
+          {day: 11, name: '黑河', color: '#6b6258'},
+          {day: 12, name: '黑河', color: '#6b6258'},
+          {day: 13, name: '哈尔滨', color: '#8a5a3b'}
+        ] }"
+        class="space-y-6"
+      >
+        <!-- 时间轴 -->
+        <div class="relative pt-4">
+          <div class="flex items-end gap-1 md:gap-1.5">
+            {allDays.map((day) => {
+              const slug = dayDestination[day];
+              return (
+                <div class="flex-1 flex flex-col items-center">
+                  <div
+                    class="w-full text-center text-[10px] md:text-xs mb-2 transition-all duration-200 font-serif min-h-[1.25rem]"
+                    :class={`hover === ${day} ? 'text-brass scale-110' : 'text-cream/40'`}
+                    x-text={`hover === ${day} ? days[${day - 1}].name : 'Day ' + ${day}`}
+                  >Day {day}</div>
+                  <button
+                    class="block w-full h-12 md:h-16 transition-all duration-300 hover:scale-y-110 origin-bottom relative cursor-pointer border-t border-brass/20"
+                    style={`background-color: ${colorOf(slug)};`}
+                    @mouseenter={`hover = ${day}`}
+                    @mouseleave="hover = null"
+                    aria-label={`Day ${day} - ${nameOf(slug)}`}
+                  >
+                    <span class="absolute inset-0 flex items-end justify-center pb-1.5 text-[9px] md:text-[10px] text-cream/70 font-serif pointer-events-none">
+                      {String(day).padStart(2, '0')}
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <!-- 图例 -->
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-8 border-t border-brass/15">
+          {palette.map((p) => (
+            <div class="flex items-center gap-2.5">
+              <span class="block w-4 h-4" style={`background-color: ${p.color};`}></span>
+              <span class="font-serif text-sm text-cream/80 tracking-wide">{p.name}</span>
+            </div>
+          ))}
+          <span class="ml-auto text-cream/40 text-xs tracking-[0.2em] uppercase">Hover to explore</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 底部 CTA ============ -->
+  <section class="py-20 lg:py-24 parchment-bg">
+    <div class="max-w-5xl mx-auto px-6 lg:px-10 text-center">
+      <div class="brass-rule mx-auto mb-8"></div>
+      <h2 class="font-serif text-3xl md:text-4xl text-ink mb-4 leading-tight">
+        行程已经铺开，<span class="italic text-brass-dark">脚步还会远吗</span>
+      </h2>
+      <p class="text-stone text-sm mb-10 max-w-xl mx-auto leading-relaxed">
+        翻开完整的 13 天行程手册，每一天的景点、餐厅、酒店、交通都已为你备齐。
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <a
+          href="/itinerary"
+          class="inline-flex items-center gap-3 px-8 py-3.5 bg-ink text-cream font-serif text-sm tracking-wider hover:bg-ink-deep transition-colors group"
+        >
+          <span>查看完整行程手册</span>
+          <span class="text-brass transition-transform group-hover:translate-x-1">→</span>
+        </a>
+        <a
+          href="/"
+          class="inline-flex items-center gap-3 px-8 py-3.5 border border-stone/30 text-stone hover:border-brass hover:text-brass-dark font-serif text-sm tracking-wider transition-colors group"
+        >
+          <span class="text-brass-dark transition-transform group-hover:-translate-x-1">←</span>
+          <span>返回首页</span>
+        </a>
+      </div>
+      <div class="brass-rule mx-auto mt-12"></div>
+    </div>
+  </section>
+
+  <style>
+    /* 滚动淡入 */
+    article {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s ease forwards;
+    }
+    article:nth-child(1) { animation-delay: 0.05s; }
+    article:nth-child(2) { animation-delay: 0.1s; }
+    article:nth-child(3) { animation-delay: 0.15s; }
+    article:nth-child(4) { animation-delay: 0.2s; }
+    article:nth-child(5) { animation-delay: 0.25s; }
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      article { opacity: 1; transform: none; animation: none; }
+    }
+  </style>
+</BaseLayout>

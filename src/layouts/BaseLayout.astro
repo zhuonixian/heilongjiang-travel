@@ -1,0 +1,78 @@
+---
+import '@styles/global.css';
+import Navbar from '@components/Navbar.astro';
+import Footer from '@components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  pageTitle?: string;
+  pageSubtitle?: string;
+}
+
+const {
+  title = '黑蒙吉 · 旅 | 2026 七月黑龙江深度行程',
+  description = '13 天 12 晚黑龙江深度行程：哈尔滨 · 五大连池 · 嘉荫 · 伊春 · 黑河。火山秘境、中俄边境、林都氧吧与白头鹤之乡。',
+  ogImage = '/images/hero/hero-heilongjiang.jpg',
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1a3a3a" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site).toString()} />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:locale" content="zh_CN" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
+
+  <link rel="icon" type="image/png" href="/images/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.font.im" />
+  <link href="https://fonts.font.im/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>[x-cloak]{display:none!important}</style>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'TouristTrip',
+    name: '2026 七月黑龙江深度行程',
+    description,
+    touristType: 'Private Group · 10 Travelers',
+    itinerary: [
+      { '@type': 'ItemList', name: '哈尔滨', description: '东方莫斯科 · 行程起点' },
+      { '@type': 'ItemList', name: '五大连池', description: '世界地质公园 · 火山秘境' },
+      { '@type': 'ItemList', name: '嘉荫', description: '中俄边境 · 恐龙王国' },
+      { '@type': 'ItemList', name: '伊春', description: '林都 · 红松故乡' },
+      { '@type': 'ItemList', name: '黑河', description: '中俄界江风情' },
+    ],
+  })} />
+</head>
+<body class="parchment-bg min-h-screen">
+  <Navbar />
+  <main>
+    <slot />
+  </main>
+  <Footer />
+
+  <script>
+    import Alpine from 'alpinejs';
+    Alpine.start();
+    window.Alpine = Alpine;
+  </script>
+</body>
+</html>

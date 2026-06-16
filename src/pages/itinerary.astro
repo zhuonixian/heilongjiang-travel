@@ -1,0 +1,498 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { itinerary, packageInfo } from '@data/itinerary';
+
+const heroImage = '/images/hero/hero-wudalianchi.jpg';
+
+// 交通图标 SVG
+const transportIcon = (type: string) => {
+  if (type === 'flight') {
+    return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>`;
+  }
+  if (type === 'boat') {
+    return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 1.3 0 1.9-.5 2.5-1 .6-.5 1.2-1 2.5-1 2.5 0 2.5 2 5 2 1.3 0 1.9-.5 2.5-1"/><path d="M19.4 14.5 22 9 12 4 2 9l2.6 5.5"/><path d="M12 4v17"/><path d="M5 13v3h14v-3"/></svg>`;
+  }
+  return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14l1.5-7h-17z"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/><path d="M6 10l1.5-4h9l1.5 4"/><path d="M9 6V4h6v2"/></svg>`;
+};
+
+const transportLabel = (type: string) => {
+  if (type === 'flight') return '航班';
+  if (type === 'boat') return '游船';
+  return '包车';
+};
+
+const formatDate = (date: string) => {
+  const [, m, d] = date.split('-');
+  return `${parseInt(m)}/${parseInt(d)}`;
+};
+---
+
+<BaseLayout
+  title="行程手册 | 黑蒙吉 · 旅"
+  description="13 天深度行程手册：北京 → 哈尔滨 → 五大连池 → 嘉荫 → 伊春 → 黑河。按天展开，含交通、景点、美食、酒店、贴士。"
+  ogImage={heroImage}
+>
+  <!-- ============ 1. 顶部 Banner ============ -->
+  <section class="relative w-full h-[400px] md:h-[440px] overflow-hidden">
+    <div class="absolute inset-0">
+      <img
+        src={heroImage}
+        alt="五大连池白龙湖"
+        class="w-full h-full object-cover"
+        loading="eager"
+      />
+      <div class="absolute inset-0 bg-gradient-to-b from-ink-deep/85 via-ink-deep/70 to-ink-deep/85"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-ink-deep/60 to-transparent"></div>
+    </div>
+
+    <div class="relative h-full max-w-7xl mx-auto px-6 lg:px-10 flex flex-col justify-center">
+      <div class="max-w-3xl">
+        <div class="inline-flex items-center gap-3 mb-5">
+          <span class="block w-8 h-px bg-brass"></span>
+          <span class="text-brass text-[11px] tracking-[0.35em] uppercase font-semibold">Itinerary Guide · 行程手册</span>
+        </div>
+        <h1 class="font-serif text-cream text-4xl md:text-5xl lg:text-6xl leading-[1.15] tracking-wide mb-5">
+          13 天深度行程手册
+        </h1>
+        <p class="text-cream/75 text-sm md:text-base leading-relaxed font-sans max-w-2xl">
+          从北京启程，穿越五大连池、嘉荫、伊春、黑河的 13 天深度旅程。本手册按天展开，含交通、景点、美食、酒店、贴士。
+        </p>
+        <div class="mt-7 flex flex-wrap items-center gap-5 text-cream/70 text-xs tracking-wide">
+          <div class="flex items-center gap-2">
+            <span class="block w-1.5 h-1.5 rounded-full bg-brass"></span>
+            <span>2026.06.28 — 07.10</span>
+          </div>
+          <div class="hidden md:block w-px h-3 bg-cream/20"></div>
+          <div class="flex items-center gap-2">
+            <span class="block w-1.5 h-1.5 rounded-full bg-brass"></span>
+            <span>10 人精品小团</span>
+          </div>
+          <div class="hidden md:block w-px h-3 bg-cream/20"></div>
+          <div class="flex items-center gap-2">
+            <span class="block w-1.5 h-1.5 rounded-full bg-brass"></span>
+            <span>5 城 · 13 天 · 12 晚</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2. Sticky 日期导航条 ============ -->
+  <div
+    x-data="{
+      activeDay: 1,
+      observer: null,
+      init() {
+        const sections = document.querySelectorAll('[data-day-section]');
+        this.observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const day = parseInt(entry.target.dataset.daySection);
+              this.activeDay = day;
+              // 自动滚动导航条到当前 day
+              const navLink = this.$refs.nav?.querySelector(`[data-nav-day='${day}']`);
+              if (navLink) {
+                navLink.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+              }
+            }
+          });
+        }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
+        sections.forEach((s) => this.observer.observe(s));
+      }
+    }"
+    class="sticky top-20 z-30 bg-cream/95 backdrop-blur-md border-y border-brass/20 shadow-sm"
+  >
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+      <div
+        x-ref="nav"
+        class="flex items-center gap-2 overflow-x-auto py-3 scrollbar-thin"
+        style="scrollbar-width: thin;"
+      >
+        <span class="shrink-0 text-[10px] tracking-[0.25em] uppercase text-stone font-semibold pr-3 border-r border-brass/30 mr-1">Days</span>
+        {itinerary.map((d) => (
+          <a
+            href={`#day-${d.day}`}
+            data-nav-day={d.day}
+            class="shrink-0 group px-4 py-2 rounded-md border transition-all duration-200 border-brass/20 text-ink hover:border-brass/60 hover:bg-brass/5"
+            :class={`activeDay === ${d.day} ? 'border-brass bg-brass text-ink-deep' : ''`}
+          >
+            <div class="flex items-center gap-2.5">
+              <span class="font-serif text-base leading-none">D{d.day}</span>
+              <span class="hidden md:inline text-[11px] tracking-wide opacity-70">{formatDate(d.date)}</span>
+              <span class="hidden lg:inline text-[11px] tracking-wide opacity-60 max-w-[120px] truncate">{d.location.split(' → ')[0]}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 3. 行程总览卡片 ============ -->
+  <section class="max-w-7xl mx-auto px-6 lg:px-10 pt-10 pb-6">
+    <div class="flex items-end justify-between mb-6 flex-wrap gap-3">
+      <div>
+        <div class="label-eyebrow !mb-2">Overview · 行程总览</div>
+        <h2 class="font-serif text-ink text-2xl md:text-3xl">本程关键信息</h2>
+      </div>
+      <p class="text-stone text-xs tracking-wide">出发前快速核对 · 行程中常备参考</p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {packageInfo.map((item) => (
+        <div class="bg-white/70 border border-brass/15 rounded-xl p-5 card-shadow">
+          <div class="text-[10px] tracking-[0.25em] uppercase text-brass-dark font-semibold mb-2">{item.label}</div>
+          <div class="font-serif text-ink text-base leading-snug">{item.value}</div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <div class="max-w-7xl mx-auto px-6 lg:px-10 my-6">
+    <div class="brass-divider"></div>
+  </div>
+
+  <!-- ============ 4. 详细行程 ============ -->
+  <div class="max-w-7xl mx-auto px-6 lg:px-10 pb-20">
+    {itinerary.map((day, idx) => (
+      <>
+        <section
+          id={`day-${day.day}`}
+          data-day-section={day.day}
+          class="scroll-mt-36 py-10 md:py-14"
+        >
+          <!-- ===== Day Header ===== -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start mb-10">
+            <div class="lg:col-span-7">
+              <div class="flex items-start gap-5">
+                <div class="shrink-0">
+                  <div class="font-serif text-brass text-[90px] md:text-[120px] leading-[0.85] tracking-tight">
+                    {String(day.day).padStart(2, '0')}
+                  </div>
+                  <div class="mt-1 text-[10px] tracking-[0.3em] uppercase text-stone font-semibold pl-1">Day {day.day}</div>
+                </div>
+                <div class="pt-2 lg:pt-4 flex-1 min-w-0">
+                  <div class="flex items-center gap-3 text-[11px] tracking-[0.2em] uppercase text-brass-dark font-semibold mb-3">
+                    <span>{day.date}</span>
+                    <span class="block w-1 h-1 rounded-full bg-brass/50"></span>
+                    <span>{day.weekday}</span>
+                  </div>
+                  <h2 class="font-serif text-ink text-2xl md:text-3xl lg:text-[2rem] leading-tight mb-3 break-words">
+                    {day.location}
+                  </h2>
+                  <p class="text-stone text-sm md:text-[15px] leading-[1.75] font-sans max-w-2xl">
+                    {day.oneLine}
+                  </p>
+                  {day.carHours && (
+                    <div class="mt-4 inline-flex items-center gap-2 text-xs text-ink/70 bg-cream-deep border border-brass/20 px-3 py-1.5 rounded-full">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                      <span>总车程 {day.carHours}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div class="lg:col-span-5">
+              <div class="relative rounded-xl overflow-hidden card-shadow aspect-[16/10] lg:aspect-[4/3]">
+                <img
+                  src={day.hero}
+                  alt={day.location}
+                  class="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-ink-deep/80 via-ink-deep/10 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+                  <div class="text-cream/60 text-[10px] tracking-[0.25em] uppercase mb-1.5">One-line Memo</div>
+                  <p class="text-cream text-[13px] md:text-sm leading-snug font-serif">
+                    {day.oneLine}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== 交通信息块 ===== -->
+          {day.transport.length > 0 && (
+            <div class="mb-10">
+              <div class="flex items-center gap-4 mb-5">
+                <h3 class="font-serif text-ink text-lg md:text-xl">交通 · Transport</h3>
+                <div class="flex-1 brass-divider"></div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {day.transport.map((t) => (
+                  <div class="bg-white/70 border border-brass/15 rounded-xl p-5 card-shadow flex gap-4">
+                    <div class="shrink-0 w-11 h-11 rounded-full bg-ink text-brass flex items-center justify-center" set:html={transportIcon(t.type)}></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="text-[10px] tracking-[0.25em] uppercase text-brass-dark font-semibold">{transportLabel(t.type)}</span>
+                      </div>
+                      <div class="font-serif text-ink text-[15px] mb-1.5 leading-snug">{t.summary}</div>
+                      {t.details && (
+                        <div class="text-stone text-[13px] leading-relaxed">{t.details}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- ===== 景点列表 ===== -->
+          {day.attractions.length > 0 && (
+            <div class="mb-10">
+              <div class="flex items-center gap-4 mb-5">
+                <h3 class="font-serif text-ink text-lg md:text-xl">景点 · Attractions</h3>
+                <div class="flex-1 brass-divider"></div>
+                <span class="text-xs text-stone">{day.attractions.length} 处</span>
+              </div>
+              <div class="space-y-5">
+                {day.attractions.map((a) => (
+                  <article class="bg-white/70 border border-brass/15 rounded-xl p-6 md:p-7 card-shadow">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                      <div class="lg:col-span-4">
+                        <div class="flex items-start gap-3 mb-3">
+                          <span class={`shrink-0 text-[10px] tracking-[0.2em] uppercase font-semibold px-2.5 py-1 rounded ${a.type === 'free' ? 'bg-brass text-ink-deep' : 'bg-navy text-cream'}`}>
+                            {a.type === 'free' ? '免费' : '收费'}
+                          </span>
+                          {a.duration && (
+                            <span class="text-[11px] text-stone tracking-wide pt-0.5">建议 {a.duration}</span>
+                          )}
+                        </div>
+                        <h4 class="font-serif text-ink text-xl md:text-2xl leading-snug mb-3">{a.name}</h4>
+                        {a.address && (
+                          <div class="flex items-start gap-2 text-stone text-[12px] leading-relaxed">
+                            <svg class="shrink-0 mt-0.5" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s-8-7-8-13a8 8 0 0 1 16 0c0 6-8 13-8 13z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                            <span>{a.address}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div class="lg:col-span-8 lg:border-l lg:border-brass/15 lg:pl-6">
+                        <p class="text-ink/85 text-[14px] md:text-[15px] leading-[1.8] font-sans">
+                          {a.description}
+                        </p>
+                        {a.highlights && a.highlights.length > 0 && (
+                          <div class="mt-5 pt-4 border-t border-brass/10">
+                            <div class="text-[10px] tracking-[0.25em] uppercase text-stone font-semibold mb-2.5">Highlights · 亮点</div>
+                            <div class="flex flex-wrap gap-2">
+                              {a.highlights.map((h) => (
+                                <span class="text-[11px] tracking-[0.08em] text-ink px-2.5 py-1 border border-brass/50 rounded-sm bg-brass/5">
+                                  {h}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- ===== 美食推荐 ===== -->
+          {day.restaurants && day.restaurants.length > 0 && (
+            <div class="mb-10">
+              <div class="flex items-center gap-4 mb-5">
+                <h3 class="font-serif text-ink text-lg md:text-xl">美食 · Cuisine</h3>
+                <div class="flex-1 brass-divider"></div>
+                <span class="text-xs text-stone">{day.restaurants.length} 家</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {day.restaurants.map((r) => (
+                  <article class="bg-white/70 border border-brass/15 rounded-xl p-6 card-shadow">
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                      <h4 class="font-serif text-ink text-lg md:text-xl leading-snug flex-1">{r.name}</h4>
+                      {r.priceRange && (
+                        <span class="shrink-0 text-[11px] text-brass-dark font-semibold tracking-wide bg-brass/10 px-2.5 py-1 rounded">
+                          {r.priceRange}
+                        </span>
+                      )}
+                    </div>
+                    {r.address && (
+                      <div class="flex items-center gap-1.5 text-stone text-[12px] mb-3">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s-8-7-8-13a8 8 0 0 1 16 0c0 6-8 13-8 13z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                        <span>{r.address}</span>
+                      </div>
+                    )}
+                    {r.description && (
+                      <p class="text-ink/85 text-[13px] leading-[1.75] mb-4">{r.description}</p>
+                    )}
+                    {r.signature && r.signature.length > 0 && (
+                      <div class="pt-3 border-t border-brass/10">
+                        <div class="text-[10px] tracking-[0.25em] uppercase text-stone font-semibold mb-2">招牌菜</div>
+                        <ul class="space-y-1">
+                          {r.signature.map((s) => (
+                            <li class="flex items-start gap-2 text-[13px] text-ink/85">
+                              <span class="text-brass mt-0.5 leading-none">◆</span>
+                              <span>{s}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- ===== 住宿 ===== -->
+          {day.hotel && (
+            <div class="mb-6">
+              <div class="flex items-center gap-4 mb-5">
+                <h3 class="font-serif text-ink text-lg md:text-xl">住宿 · Accommodation</h3>
+                <div class="flex-1 brass-divider"></div>
+              </div>
+              <article class="bg-white/70 border border-brass/15 rounded-xl overflow-hidden card-shadow">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-0">
+                  {day.hotel.image ? (
+                    <div class="md:col-span-4">
+                      <div class="h-full min-h-[180px]">
+                        <img src={day.hotel.image} alt={day.hotel.name} class="w-full h-full object-cover" loading="lazy" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div class="md:col-span-4 bg-ink-deep flex items-center justify-center min-h-[180px]">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(201,169,97,0.4)" stroke-width="1.2"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/><path d="M9 12h.01M15 12h.01"/></svg>
+                    </div>
+                  )}
+                  <div class="md:col-span-8 p-6 md:p-7">
+                    <div class="text-[10px] tracking-[0.25em] uppercase text-brass-dark font-semibold mb-2">Tonight's Stay · 今夜下榻</div>
+                    <h4 class="font-serif text-ink text-xl md:text-2xl mb-3 leading-snug">{day.hotel.name}</h4>
+                    <div class="flex items-center gap-1.5 text-stone text-[13px] mb-3">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s-8-7-8-13a8 8 0 0 1 16 0c0 6-8 13-8 13z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                      <span>{day.hotel.address}</span>
+                    </div>
+                    {day.hotel.description && (
+                      <p class="text-ink/85 text-[13px] leading-[1.75]">{day.hotel.description}</p>
+                    )}
+                  </div>
+                </div>
+              </article>
+            </div>
+          )}
+        </section>
+
+        {idx < itinerary.length - 1 && (
+          <div class="brass-divider"></div>
+        )}
+      </>
+    ))}
+  </div>
+
+  <!-- ============ 5. 底部 CTA ============ -->
+  <section class="relative bg-ink-deep overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+      <div class="absolute -top-20 -right-20 w-96 h-96 rounded-full bg-brass/20 blur-3xl"></div>
+      <div class="absolute -bottom-20 -left-20 w-96 h-96 rounded-full bg-navy/30 blur-3xl"></div>
+    </div>
+    <div class="relative max-w-7xl mx-auto px-6 lg:px-10 py-16 md:py-20">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+        <div class="max-w-xl">
+          <div class="inline-flex items-center gap-3 mb-4">
+            <span class="block w-8 h-px bg-brass"></span>
+            <span class="text-brass text-[11px] tracking-[0.35em] uppercase font-semibold">Continue · 行程之外</span>
+          </div>
+          <h2 class="font-serif text-cream text-2xl md:text-3xl leading-tight mb-3">
+            想深入了解每座城市的故事？
+          </h2>
+          <p class="text-cream/65 text-sm leading-relaxed">
+            浏览目的地专题，或返回首页查看完整概览、实用贴士与美食地图。
+          </p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 shrink-0">
+          <a
+            href="/destinations"
+            class="group inline-flex items-center gap-3 bg-brass text-ink-deep font-medium px-6 py-3.5 rounded-sm hover:bg-brass-light transition-colors"
+          >
+            <span class="text-sm tracking-wide">查看目的地专题</span>
+            <svg class="group-hover:translate-x-1 transition-transform" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a
+            href="/"
+            class="inline-flex items-center gap-2 border border-cream/30 text-cream px-6 py-3.5 rounded-sm hover:border-brass hover:text-brass transition-colors"
+          >
+            <span class="text-sm tracking-wide">返回首页</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  /* 滚动条美化（日期导航） */
+  .scrollbar-thin::-webkit-scrollbar {
+    height: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(201, 169, 97, 0.3);
+    border-radius: 2px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(201, 169, 97, 0.5);
+  }
+
+  /* 打印优化 */
+  @media print {
+    /* 隐藏导航 / 交互元素 */
+    header,
+    .sticky,
+    nav,
+    footer,
+    [data-nav-day],
+    section[class*="bg-ink-deep"] {
+      display: none !important;
+    }
+
+    /* 重置背景为白色 */
+    body, .parchment-bg {
+      background: #ffffff !important;
+      color: #1a3a3a !important;
+    }
+
+    /* 放大字号，行高提升 */
+    html {
+      font-size: 11pt;
+      background: #ffffff !important;
+    }
+
+    /* section 间距压缩 */
+    section[data-day-section] {
+      padding: 12pt 0 !important;
+      page-break-inside: avoid;
+    }
+
+    /* 卡片去阴影，加细线 */
+    .card-shadow {
+      box-shadow: none !important;
+      border: 1px solid rgba(26, 58, 58, 0.15) !important;
+    }
+
+    /* Day hero 图缩放打印 */
+    section[data-day-section] img {
+      max-height: 6cm !important;
+      object-fit: cover !important;
+    }
+
+    /* 链接不显示下划线 */
+    a {
+      text-decoration: none !important;
+      color: inherit !important;
+    }
+
+    /* 隐藏 CTA 区 */
+    section.bg-ink-deep {
+      display: none !important;
+    }
+
+    /* 段间距 */
+    .brass-divider {
+      page-break-after: avoid;
+    }
+  }
+</style>

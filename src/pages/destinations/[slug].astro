@@ -1,0 +1,427 @@
+---
+import { destinations, getDestinationBySlug, itinerary } from '@data/itinerary';
+import BaseLayout from '@layouts/BaseLayout.astro';
+
+export function getStaticPaths() {
+  return destinations.map((d) => ({ params: { slug: d.slug } }));
+}
+
+const { slug } = Astro.params;
+const destination = getDestinationBySlug(slug!);
+
+if (!destination) {
+  return Astro.redirect('/destinations');
+}
+
+const relatedDays = itinerary.filter((d) => destination.days.includes(d.day));
+
+// 上一个 / 下一个目的地
+const idx = destinations.findIndex((d) => d.slug === slug);
+const prev = idx > 0 ? destinations[idx - 1] : destinations[destinations.length - 1];
+const next = idx < destinations.length - 1 ? destinations[idx + 1] : destinations[0];
+const no = String(idx + 1).padStart(2, '0');
+
+// 当地特色（派生内容，按 slug 映射）
+const localMap: Record<string, { food: { title: string; desc: string }; scene: { title: string; desc: string }; culture: { title: string; desc: string }; activity: { title: string; desc: string } }> = {
+  wudalianchi: {
+    food: { title: '矿泉鱼 · 冷矿泉酿', desc: '野生鲤鱼于 2-4℃ 冷矿泉中生长，肉质紧实无土腥，铁锅炖与清蒸双绝。' },
+    scene: { title: '14 座火山串起的地质奇观', desc: '新老期火山拔地而起，5 个堰塞湖如明珠串联，熔岩台地一望无垠。' },
+    culture: { title: '火山圣水节非遗', desc: '国家级非物质文化遗产，每年端午，各族民众共饮圣水、共祭火神。' },
+    activity: { title: '登药泉山俯瞰火山群', desc: '登顶海拔较低的药泉山，14 座火山与五池尽收眼底，晨雾中最美。' },
+  },
+  jiayin: {
+    food: { title: '黑龙江铁锅炖江鱼', desc: '黑龙江里现捞的活鱼，柴火慢炖，汤汁泡饭或蘸玉米饼，是东北菜的灵魂。' },
+    scene: { title: '中俄界江 · 一脚跨两国', desc: '黑龙江主航道中心线便是国境，223 界碑旁可眺望俄罗斯巴斯克沃村。' },
+    culture: { title: '神州第一龙的故乡', desc: '6500 万年前的白垩纪王国，恐龙化石与岩层剖面诉说远古故事。' },
+    activity: { title: '茅兰沟花岗岩峡谷徒步', desc: '北方小九寨，亿年花岗岩断裂成百米深谷，黑龙潭翡翠潭水清凉。' },
+  },
+  yichun: {
+    food: { title: '小兴安岭山珍四宝', desc: '刺嫩芽、蕨菜、榛蘑、猴头菇——林都馈赠的本真滋味，城市里尝不到。' },
+    scene: { title: '4 万平方公里森林海洋', desc: '中国林都，森林覆盖率 84% 以上，红松王国、花岗岩石林立林海之中。' },
+    culture: { title: '林都文化与知青岁月', desc: '从伐木到护林，伊春见证了中国林业的转型，林海深处藏着一代人的青春。' },
+    activity: { title: '金山鹿苑喂小鹿', desc: '东北小奈良，56 公顷半开放式鹿场，散养梅花鹿与天山马鹿，温顺可亲。' },
+  },
+  heihe: {
+    food: { title: '柴火铁锅炖 · 杀猪菜', desc: '柴火灶铁锅炖江鱼、玉米饼贴锅边，仪式感拉满；20 年老店杀猪菜口碑爆棚。' },
+    scene: { title: '一江观两国的边境风光', desc: '与布拉戈维申斯克隔江相望，游船航行至俄罗斯海关附近返航。' },
+    culture: { title: '瑷珲历史 · 知青峥嵘', desc: '瑷珲历史陈列馆触摸近代百年风云，全国唯一的知青博物馆重温岁月。' },
+    activity: { title: '黑龙江游船近距离眺望', desc: '阿穆尔州电视塔、列宁广场、海军炮艇——一江之隔，两国风情。' },
+  },
+  harbin: {
+    food: { title: '春饼 · 锅包肉 · 铁锅炖', desc: '老昌春饼分店遍布，东北豪迈集萃；道里菜市场藏着最地道的市井滋味。' },
+    scene: { title: '中央大街的俄式石板路', desc: '百年面包石铺就的步行街，两侧俄式、巴洛克建筑林立，东方小巴黎。' },
+    culture: { title: '圣索菲亚的拜占庭穹顶', desc: '远东地区最大的东正教堂之一，红砖绿顶，是哈尔滨的城市名片。' },
+    activity: { title: '圣索菲亚 · 中央大街漫步', desc: '清晨的教堂广场、黄昏的步行街，是行程启程与收官的最佳背景板。' },
+  },
+};
+const local = localMap[destination.slug];
+
+const locals = [
+  { icon: 'food', label: 'Food · 美食', ...local.food },
+  { icon: 'scene', label: 'Scenery · 风光', ...local.scene },
+  { icon: 'culture', label: 'Culture · 人文', ...local.culture },
+  { icon: 'activity', label: 'Activity · 活动', ...local.activity },
+];
+
+// 高光时刻引导文字（按序号派生）
+const highlightBlurbs: Record<string, string[]> = {
+  wudalianchi: ['联合国教科文组织认证的火山地质圣地，全球罕见。', '与法国维希、俄罗斯高加索并列，水温常年 2-4℃。', '新老期火山串起的堰塞湖群，每一座都讲述地质史诗。', '结壳状熔岩形成的巨型石块，凝固的火山教科书。', '一湖两界——西岸新期熔岩，东岸远古泥沙。'],
+  jiayin: ['中俄边境小兴安岭脚下的白垩纪王国。', '中国境内发现的第一具完整恐龙化石骨架。', '花岗岩界碑立于主航道中心线，眺望俄罗斯村庄。', '一江之隔，两岸风情，游船穿梭的边境水道。', '6500 万年前的真实化石与岩层剖面。'],
+  yichun: ['原始森林与花岗岩石林的奇妙共生。', '参天红松遮天蔽日，天然大氧吧名不虚传。', '全球珍稀白头鹤每年春天准时归来筑巢。', '56 公顷半开放鹿场，散养梅花鹿温顺可亲。', '梦幻花海与云雾山谷，现实版的世外桃源。'],
+  heihe: ['从码头出发，航行至俄罗斯海关附近返航。', '阿穆尔州电视塔、列宁广场尽收眼底。', '聚焦马占山将军抗日事迹，江桥抗战历史。', '全国唯一以知青为主题的博物馆。', '与布拉戈维申斯克隔江相望的边境重镇。'],
+  harbin: ['远东地区最大的东正教堂之一，红砖绿顶。', '百年面包石铺就的步行街，俄式建筑博物馆。', '拜占庭、巴洛克、新艺术运动风格交织。', '春饼、锅包肉、铁锅炖——东北豪迈集萃。'],
+};
+
+const heroImage = destination.hero;
+---
+
+<BaseLayout
+  title={`${destination.name} · ${destination.subtitle} | 黑蒙吉 · 旅`}
+  description={`${destination.name}：${destination.tagline}。${destination.description.slice(0, 80)}…`}
+  ogImage={destination.hero}
+>
+  <!-- ============ A. Hero 区 ============ -->
+  <section class="relative min-h-screen flex items-center overflow-hidden">
+    <!-- 背景图 -->
+    <div class="absolute inset-0">
+      <img src={heroImage} alt={destination.name} class="w-full h-full object-cover" />
+      <div class="absolute inset-0" style="background: rgba(15, 41, 41, 0.72);"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-ink-deep/40 via-transparent to-ink-deep/80"></div>
+    </div>
+
+    <!-- 装饰 -->
+    <div class="absolute top-24 right-10 hidden lg:block pointer-events-none">
+      <div class="w-32 h-32 border border-brass/30 rotate-45"></div>
+    </div>
+    <div class="absolute bottom-10 left-10 hidden lg:flex items-center gap-3 pointer-events-none">
+      <span class="text-brass/60 font-serif text-xs tracking-[0.4em]">DESTINATION</span>
+      <span class="w-12 h-px bg-brass/60"></span>
+      <span class="text-brass/60 font-serif text-xs tracking-[0.4em]">{no} / 05</span>
+    </div>
+
+    <!-- 内文 -->
+    <div class="relative max-w-7xl mx-auto px-6 lg:px-10 pt-20 w-full">
+      <div class="max-w-4xl">
+        <div class="flex items-center gap-4 mb-6">
+          <span class="font-serif text-brass text-2xl">{no}</span>
+          <span class="w-16 h-px bg-brass/60"></span>
+          <span class="text-brass text-xs tracking-[0.35em] uppercase">{destination.region}</span>
+        </div>
+        <h1 class="font-serif text-cream text-6xl md:text-7xl lg:text-8xl xl:text-[120px] leading-[0.95] mb-6 tracking-tight">
+          {destination.name}
+        </h1>
+        <p class="font-serif italic text-brass-light text-xl md:text-2xl mb-6">
+          {destination.subtitle}
+        </p>
+        <p class="font-serif text-cream/75 text-base md:text-lg max-w-2xl leading-relaxed">
+          {destination.tagline}
+        </p>
+      </div>
+
+      <!-- 底部装饰条 -->
+      <div class="absolute bottom-12 left-6 lg:left-10 right-6 lg:right-10 max-w-7xl">
+        <div class="flex flex-wrap items-center gap-6 md:gap-10 pt-6 border-t border-brass/25">
+          <div>
+            <div class="text-brass/70 text-[10px] tracking-[0.3em] uppercase mb-1">Best Season</div>
+            <div class="text-cream font-serif text-sm md:text-base">{destination.bestSeason}</div>
+          </div>
+          <div class="hidden md:block w-px h-10 bg-brass/25"></div>
+          <div>
+            <div class="text-brass/70 text-[10px] tracking-[0.3em] uppercase mb-1">Itinerary Days</div>
+            <div class="text-cream font-serif text-sm md:text-base">Day {destination.days.join(' · ')}</div>
+          </div>
+          <div class="hidden md:block w-px h-10 bg-brass/25"></div>
+          <div>
+            <div class="text-brass/70 text-[10px] tracking-[0.3em] uppercase mb-1">Highlights</div>
+            <div class="text-cream font-serif text-sm md:text-base">{destination.highlights.length} 处核心亮点</div>
+          </div>
+          <a
+            href="#about"
+            class="ml-auto hidden md:inline-flex items-center gap-2 text-brass hover:text-brass-light text-xs tracking-[0.3em] uppercase transition-colors"
+          >
+            <span>向下探索</span>
+            <span>↓</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ B. 概述区 ============ -->
+  <section id="about" class="py-20 lg:py-28 parchment-bg">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+      <div class="mb-14 lg:mb-16 max-w-3xl">
+        <span class="label-eyebrow">About · 关于这处目的地</span>
+        <h2 class="font-serif text-4xl md:text-5xl lg:text-6xl text-ink mt-2 leading-[1.1]">
+          {destination.name}
+          <span class="block italic text-stone-light text-2xl md:text-3xl mt-2 font-normal">— {destination.subtitle}</span>
+        </h2>
+        <div class="brass-rule mt-6"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+        <!-- 左：完整 description -->
+        <div class="lg:col-span-7">
+          <div class="font-serif text-ink text-lg leading-[1.95] first-letter:float-left first-letter:font-serif first-letter:text-7xl first-letter:text-brass-dark first-letter:mr-3 first-letter:leading-none first-letter:mt-1">
+            {destination.description}
+          </div>
+          <div class="mt-10 pt-8 border-t border-stone/15">
+            <p class="font-serif italic text-stone-light text-base leading-relaxed">
+              「{destination.tagline}」
+            </p>
+            <p class="mt-3 text-stone-light text-xs tracking-[0.2em] uppercase">
+              — {destination.region} · 黑龙江
+            </p>
+          </div>
+        </div>
+
+        <!-- 右：信息卡片 -->
+        <div class="lg:col-span-5">
+          <div class="bg-ink-deep text-cream p-8 lg:p-10 rounded-sm relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 border-t border-r border-brass/30 -mr-2 -mt-2 pointer-events-none"></div>
+            <h3 class="font-serif text-brass text-sm tracking-[0.3em] uppercase mb-8">Information</h3>
+            <dl class="space-y-6">
+              <div class="flex items-baseline justify-between gap-4 pb-5 border-b border-cream/10">
+                <dt class="text-cream/60 text-xs tracking-[0.2em] uppercase">最佳季节</dt>
+                <dd class="font-serif text-cream text-right text-sm leading-relaxed">{destination.bestSeason}</dd>
+              </div>
+              <div class="flex items-baseline justify-between gap-4 pb-5 border-b border-cream/10">
+                <dt class="text-cream/60 text-xs tracking-[0.2em] uppercase">所属区域</dt>
+                <dd class="font-serif text-cream text-right text-sm">{destination.region}</dd>
+              </div>
+              <div class="flex items-baseline justify-between gap-4 pb-5 border-b border-cream/10">
+                <dt class="text-cream/60 text-xs tracking-[0.2em] uppercase">行程天数</dt>
+                <dd class="font-serif text-cream text-right text-sm">
+                  Day {destination.days.join(' · ')}
+                  <span class="block text-cream/50 text-[11px] mt-0.5">共 {destination.days.length} 天</span>
+                </dd>
+              </div>
+              <div class="flex items-baseline justify-between gap-4">
+                <dt class="text-cream/60 text-xs tracking-[0.2em] uppercase">核心亮点</dt>
+                <dd class="font-serif text-brass text-right text-3xl">{destination.highlights.length}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ C. 高光时刻 ============ -->
+  <section class="py-20 lg:py-28 bg-cream-deep/40">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+      <div class="mb-14 lg:mb-16 max-w-3xl">
+        <span class="label-eyebrow">Highlights · 高光时刻</span>
+        <h2 class="font-serif text-4xl md:text-5xl text-ink mt-2 leading-tight">
+          为什么<span class="italic text-brass-dark">值得专程前来</span>
+        </h2>
+        <div class="brass-rule mt-6"></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        {destination.highlights.map((h, i) => {
+          const blurb = highlightBlurbs[destination.slug]?.[i] ?? `${h}——这一处不容错过的核心体验。`;
+          return (
+            <article class="group bg-cream p-7 lg:p-8 rounded-sm card-shadow card-shadow-hover relative overflow-hidden border border-stone/10">
+              <div class="absolute top-0 right-0 w-16 h-16 pointer-events-none">
+                <div class="absolute top-3 right-3 w-3 h-3 border-t border-r border-brass/40 group-hover:border-brass transition-colors"></div>
+              </div>
+              <div class="flex items-baseline gap-3 mb-4">
+                <span class="font-serif text-brass text-4xl leading-none">{String(i + 1).padStart(2, '0')}</span>
+                <span class="w-8 h-px bg-brass/40"></span>
+              </div>
+              <h3 class="font-serif text-ink text-lg mb-3 leading-tight">{h}</h3>
+              <p class="text-stone text-sm leading-[1.8]">{blurb}</p>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ D. 关联行程 ============ -->
+  <section class="py-20 lg:py-28 parchment-bg">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+      <div class="mb-14 lg:mb-16 max-w-3xl">
+        <span class="label-eyebrow">Itinerary · 关联行程</span>
+        <h2 class="font-serif text-4xl md:text-5xl text-ink mt-2 leading-tight">
+          在<span class="italic text-brass-dark"> 第 {destination.days[0]} 天 </span>抵达这里
+        </h2>
+        <div class="brass-rule mt-6"></div>
+      </div>
+
+      <div class="space-y-4">
+        {relatedDays.map((day, i) => (
+          <a
+            href={`/itinerary#day-${day.day}`}
+            class="group block bg-cream border border-stone/15 rounded-sm card-shadow card-shadow-hover overflow-hidden"
+          >
+            <div class="grid grid-cols-12 gap-4 items-center p-6 lg:p-7">
+              {/* Day 编号 */}
+              <div class="col-span-2 lg:col-span-1">
+                <div class="font-serif text-brass text-3xl lg:text-4xl leading-none">{String(day.day).padStart(2, '0')}</div>
+                <div class="text-[10px] text-stone-light tracking-[0.2em] uppercase mt-1">Day</div>
+              </div>
+              {/* 日期 */}
+              <div class="col-span-10 lg:col-span-2 lg:border-l lg:border-stone/15 lg:pl-6">
+                <div class="font-serif text-ink text-sm">{day.date}</div>
+                <div class="text-stone-light text-xs mt-0.5">{day.weekday}</div>
+              </div>
+              {/* location + oneLine */}
+              <div class="col-span-12 lg:col-span-7 lg:border-l lg:border-stone/15 lg:pl-6">
+                <div class="font-serif text-ink text-base lg:text-lg mb-1">{day.location}</div>
+                <div class="text-stone text-sm leading-relaxed">{day.oneLine}</div>
+              </div>
+              {/* CTA */}
+              <div class="col-span-12 lg:col-span-2 lg:border-l lg:border-stone/15 lg:pl-6 lg:text-right">
+                <span class="inline-flex items-center gap-2 text-brass-dark group-hover:text-brass font-serif text-sm transition-colors">
+                  <span>查看完整行程</span>
+                  <span class="transition-transform group-hover:translate-x-1">→</span>
+                </span>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ E. 当地特色 ============ -->
+  <section class="py-20 lg:py-28 bg-ink-deep text-cream relative overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none opacity-30">
+      <div class="absolute top-10 left-10 w-20 h-20 border-l border-t border-brass/30"></div>
+      <div class="absolute bottom-10 right-10 w-20 h-20 border-r border-b border-brass/30"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-6 lg:px-10">
+      <div class="mb-14 lg:mb-16 max-w-3xl">
+        <span class="label-eyebrow !text-brass">Local · 当地特色</span>
+        <h2 class="font-serif text-4xl md:text-5xl mt-2 leading-tight">
+          一城一味，<span class="italic text-brass">一景一忆</span>
+        </h2>
+        <div class="brass-rule mt-6"></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+        {locals.map((item, i) => (
+          <article class="group relative p-8 lg:p-10 border border-brass/20 hover:border-brass/50 transition-colors bg-ink-deep/40 backdrop-blur-sm overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-0 bg-brass group-hover:h-full transition-all duration-500"></div>
+            <div class="flex items-start gap-5">
+              {/* 图标 */}
+              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-brass/40 group-hover:bg-brass/10 transition-colors">
+                {item.icon === 'food' && (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c9a961" stroke-width="1.4">
+                    <path d="M3 3v7c0 1.1.9 2 2 2h0c1.1 0 2-.9 2-2V3M5 12v9M19 3c-1.5 0-3 1.5-3 4v4c0 1.1.9 2 2 2h1V3z" />
+                  </svg>
+                )}
+                {item.icon === 'scene' && (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c9a961" stroke-width="1.4">
+                    <path d="M3 18l5-7 4 5 3-4 6 6" />
+                    <circle cx="7" cy="6" r="1.5" />
+                    <path d="M2 21h20" />
+                  </svg>
+                )}
+                {item.icon === 'culture' && (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c9a961" stroke-width="1.4">
+                    <path d="M3 21V8l9-5 9 5v13" />
+                    <path d="M9 21V12M15 21V12M3 21h18" />
+                  </svg>
+                )}
+                {item.icon === 'activity' && (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c9a961" stroke-width="1.4">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 3v18M3 12h18M5.5 5.5l13 13M18.5 5.5l-13 13" strokeOpacity="0.4" />
+                  </svg>
+                )}
+              </div>
+              <div class="flex-1">
+                <div class="text-brass/80 text-[10px] tracking-[0.3em] uppercase mb-2">{item.label}</div>
+                <h3 class="font-serif text-cream text-xl lg:text-2xl mb-3 leading-tight">{item.title}</h3>
+                <p class="text-cream/70 text-sm leading-[1.85]">{item.desc}</p>
+              </div>
+              <span class="font-serif text-brass/40 text-3xl leading-none">{String(i + 1).padStart(2, '0')}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ F. 底部导航（prev / next） ============ -->
+  <section class="py-20 lg:py-24 parchment-bg">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+      <div class="text-center mb-12">
+        <span class="label-eyebrow">Continue · 继续探索</span>
+        <h2 class="font-serif text-3xl md:text-4xl text-ink mt-2">下一处目的地</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 mb-12">
+        {/* Prev */}
+        <a
+          href={`/destinations/${prev.slug}`}
+          class="group relative block overflow-hidden rounded-sm card-shadow card-shadow-hover bg-cream"
+        >
+          <div class="grid grid-cols-12 items-center min-h-[180px]">
+            <div class="col-span-4 relative overflow-hidden aspect-[4/3] md:aspect-auto md:h-full">
+              <img src={prev.card} alt={prev.name} class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <div class="absolute inset-0 bg-ink-deep/30 group-hover:bg-ink-deep/20 transition-colors"></div>
+            </div>
+            <div class="col-span-8 p-6 lg:p-8">
+              <div class="flex items-center gap-2 text-brass-dark text-xs tracking-[0.3em] uppercase mb-3">
+                <span class="transition-transform group-hover:-translate-x-1">←</span>
+                <span>Previous · 上一处</span>
+              </div>
+              <div class="text-stone-light text-[11px] tracking-[0.2em] uppercase mb-1">{prev.region}</div>
+              <h3 class="font-serif text-ink text-2xl lg:text-3xl mb-2 leading-tight">{prev.name}</h3>
+              <p class="font-serif italic text-stone text-sm">{prev.subtitle}</p>
+            </div>
+          </div>
+        </a>
+
+        {/* Next */}
+        <a
+          href={`/destinations/${next.slug}`}
+          class="group relative block overflow-hidden rounded-sm card-shadow card-shadow-hover bg-cream"
+        >
+          <div class="grid grid-cols-12 items-center min-h-[180px]">
+            <div class="col-span-8 p-6 lg:p-8 order-2 md:order-1">
+              <div class="flex items-center gap-2 text-brass-dark text-xs tracking-[0.3em] uppercase mb-3 md:justify-end">
+                <span>Next · 下一处</span>
+                <span class="transition-transform group-hover:translate-x-1">→</span>
+              </div>
+              <div class="text-stone-light text-[11px] tracking-[0.2em] uppercase mb-1 md:text-right">{next.region}</div>
+              <h3 class="font-serif text-ink text-2xl lg:text-3xl mb-2 leading-tight md:text-right">{next.name}</h3>
+              <p class="font-serif italic text-stone text-sm md:text-right">{next.subtitle}</p>
+            </div>
+            <div class="col-span-4 order-1 md:order-2 relative overflow-hidden aspect-[4/3] md:aspect-auto md:h-full">
+              <img src={next.card} alt={next.name} class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <div class="absolute inset-0 bg-ink-deep/30 group-hover:bg-ink-deep/20 transition-colors"></div>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="text-center">
+        <a
+          href="/destinations"
+          class="inline-flex items-center gap-3 px-8 py-3.5 bg-ink text-cream font-serif text-sm tracking-wider hover:bg-ink-deep transition-colors group"
+        >
+          <span class="text-brass">↑</span>
+          <span>返回目的地总览</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    /* 滚动淡入 */
+    section { position: relative; }
+    @media (prefers-reduced-motion: no-preference) {
+      section > div { animation: sectionFade 0.6s ease both; }
+    }
+    @keyframes sectionFade {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</BaseLayout>

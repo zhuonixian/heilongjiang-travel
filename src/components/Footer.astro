@@ -1,0 +1,60 @@
+---
+import { packageInfo } from '@data/itinerary';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="bg-ink-deep text-cream/70 pt-20 pb-8">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+      <div class="lg:col-span-5">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-12 h-12 border border-brass/60 flex items-center justify-center rotate-45">
+            <span class="-rotate-45 text-brass font-serif text-xl">黑</span>
+          </div>
+          <div>
+            <div class="text-cream font-serif text-2xl tracking-wide">黑蒙吉 · 旅</div>
+            <div class="text-brass/80 text-[10px] tracking-[0.3em] uppercase mt-0.5">Heilongjiang Journey 2026</div>
+          </div>
+        </div>
+        <p class="text-sm leading-relaxed text-cream/60 max-w-md">
+          13 天深度行程，从北京出发，穿越哈尔滨、五大连池、嘉荫、伊春、黑河，在中俄边境触摸凝固的火山、聆听白头鹤的鸣叫、与东北小奈良的小鹿相遇。
+        </p>
+        <div class="brass-rule mt-8"></div>
+        <p class="mt-6 text-xs tracking-[0.2em] uppercase text-brass/70">
+          Travel · Discover · Beyond
+        </p>
+      </div>
+
+      <div class="lg:col-span-3">
+        <div class="label-eyebrow !text-brass/80 !mb-5">导航 · Navigate</div>
+        <ul class="space-y-3 text-sm">
+          <li><a href="/" class="hover:text-brass transition-colors">行程概览</a></li>
+          <li><a href="/itinerary" class="hover:text-brass transition-colors">行程手册</a></li>
+          <li><a href="/destinations" class="hover:text-brass transition-colors">目的地专题</a></li>
+          <li><a href="/guide" class="hover:text-brass transition-colors">实用信息中心</a></li>
+        </ul>
+      </div>
+
+      <div class="lg:col-span-4">
+        <div class="label-eyebrow !text-brass/80 !mb-5">行程要素 · Highlights</div>
+        <ul class="space-y-2.5 text-sm">
+          {packageInfo.slice(0, 5).map((item) => (
+            <li class="flex items-start gap-3">
+              <span class="text-brass mt-1 text-[10px]">◆</span>
+              <span class="text-cream/60 text-xs tracking-wider">{item.label}</span>
+              <span class="text-cream/90 text-xs ml-auto text-right">{item.value}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <div class="brass-divider mt-16 mb-6"></div>
+
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-cream/40">
+      <p>© {year} 黑蒙吉 · 旅 · 13 Days Heilongjiang Travel Plan</p>
+      <p class="tracking-[0.2em] uppercase text-brass/50">Private Journey · For Review</p>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #1a3a3a;
+  --color-ink-deep: #0f2929;
+  --color-navy: #1e3a5f;
+  --color-navy-deep: #15294a;
+  --color-brass: #c9a961;
+  --color-brass-dark: #a08530;
+  --color-brass-light: #e0c891;
+  --color-cream: #faf8f3;
+  --color-cream-deep: #f3eee2;
+  --color-linen: #e8e0d0;
+  --color-stone: #6b6258;
+  --color-stone-light: #968a7c;
+
+  --font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', Georgia, serif;
+  --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 2px;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--color-cream);
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background-color: var(--color-cream);
+  margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.brass-divider {
+  height: 1px;
+  background: linear-gradient(to right,
+    transparent 0%,
+    var(--color-brass) 20%,
+    var(--color-brass) 80%,
+    transparent 100%);
+  opacity: 0.5;
+}
+
+.brass-rule {
+  width: 60px;
+  height: 2px;
+  background: var(--color-brass);
+}
+
+.label-eyebrow {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-brass-dark);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.card-shadow {
+  box-shadow: 0 1px 3px rgba(26, 58, 58, 0.04),
+              0 8px 24px rgba(26, 58, 58, 0.06);
+}
+
+.card-shadow-hover {
+  transition: all 0.3s ease;
+}
+
+.card-shadow-hover:hover {
+  box-shadow: 0 4px 8px rgba(26, 58, 58, 0.08),
+              0 16px 40px rgba(26, 58, 58, 0.12);
+  transform: translateY(-2px);
+}
+
+.parchment-bg {
+  background-color: var(--color-cream);
+  background-image:
+    radial-gradient(circle at 25% 30%, rgba(201, 169, 97, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 75% 70%, rgba(30, 58, 95, 0.02) 0%, transparent 50%);
+}
+
+.section-pad {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+@media (max-width: 768px) {
+  .section-pad {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+}
+
+[x-cloak] { display: none !important; }

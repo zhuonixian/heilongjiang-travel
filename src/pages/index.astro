@@ -1,0 +1,499 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { itinerary, destinations, dishes, packageInfo, tripStats } from '@data/itinerary';
+
+// 行程亮点：精选 6 个最具代表性的景点
+const highlights = [
+  {
+    name: '白龙湖（三池）',
+    destination: '五大连池',
+    day: 2,
+    image: '/images/destinations/wudalianchi-bailong-lake.jpg',
+    description: '"一湖两界"地质奇观 · 14 座火山全貌倒映湖中',
+  },
+  {
+    name: '龙门石寨',
+    destination: '五大连池',
+    day: 3,
+    image: '/images/destinations/wudalianchi-longmen-shizhai.jpg',
+    description: '凝固的火山教科书 · 全球罕见结壳状熔岩',
+  },
+  {
+    name: '嘉荫恐龙国家地质公园',
+    destination: '嘉荫',
+    day: 5,
+    image: '/images/destinations/jiayin-dinosaur-park.jpg',
+    description: '神州第一龙 · 穿越 6500 万年的白垩纪王国',
+  },
+  {
+    name: '汤旺河林海奇石',
+    destination: '伊春',
+    day: 7,
+    image: '/images/destinations/tangwanghe-stone-forest.jpg',
+    description: '花岗岩石林立林海之中 · 天然大氧吧',
+  },
+  {
+    name: '金山鹿苑',
+    destination: '伊春',
+    day: 10,
+    image: '/images/destinations/jinshan-deer-park.jpg',
+    description: '东北小奈良 · 散养梅花鹿的童话森林',
+  },
+  {
+    name: '黑龙江游船',
+    destination: '黑河',
+    day: 11,
+    image: '/images/destinations/heihe-river-cruise.jpg',
+    description: '一江观两国 · 眺望布拉戈维申斯克',
+  },
+];
+
+const firstDest = destinations.slice(0, 3);
+const secondDest = destinations.slice(3, 5);
+const featuredDishes = dishes.slice(0, 6);
+
+// 主题色映射
+const regionTheme: Record<string, string> = {
+  '五大连池': '五大连池 · 黑河市',
+  '嘉荫': '嘉荫 · 伊春市',
+  '伊春': '伊春 · 林都',
+  '黑河': '黑河 · 中俄界江',
+  '哈尔滨': '哈尔滨 · 东方莫斯科',
+};
+---
+
+<BaseLayout title="黑蒙吉 · 旅 | 2026 七月黑龙江深度行程" pageTitle="凝固的火山 · 流淌的界江" pageSubtitle="13 天 · 5 城 · 一场属于 10 位旅人的私享之旅">
+  <style>
+    /* 滚动淡入 */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .reveal {
+      opacity: 0;
+      animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .reveal-d1 { animation-delay: 0.05s; }
+    .reveal-d2 { animation-delay: 0.15s; }
+    .reveal-d3 { animation-delay: 0.25s; }
+    .reveal-d4 { animation-delay: 0.35s; }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; animation: none; }
+    }
+    .dest-card { transition: transform .35s ease, box-shadow .35s ease; }
+    .dest-card:hover { transform: translateY(-6px); }
+    .timeline-dot { transition: all .3s ease; }
+    .timeline-card:hover .timeline-dot { background: var(--color-brass); transform: scale(1.15); }
+  </style>
+
+  <!-- ============== 1. HERO ============== -->
+  <section class="relative min-h-screen flex items-center overflow-hidden">
+    <!-- 背景图 -->
+    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('/images/hero/hero-heilongjiang.jpg');"></div>
+    <!-- 墨绿色叠加 + 渐变到下 -->
+    <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(15,41,41,0.55) 0%, rgba(15,41,41,0.7) 50%, rgba(15,41,41,0.95) 100%);"></div>
+    <!-- 黄铜装饰：上下细线 -->
+    <div class="absolute top-20 left-0 right-0 h-px bg-brass/15"></div>
+
+    <div class="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-10 pt-32 pb-24 lg:pt-40 lg:pb-28">
+      <div class="max-w-4xl">
+        <div class="reveal reveal-d1 flex items-center gap-4 mb-8">
+          <span class="h-px w-12 bg-brass"></span>
+          <span class="label-eyebrow !mb-0 !text-brass-light tracking-[0.4em]">2026 · 七月 · 黑龙江深度行程</span>
+        </div>
+
+        <h1 class="reveal reveal-d2 font-serif text-cream text-5xl md:text-6xl lg:text-7xl leading-[1.1] font-semibold tracking-tight">
+          凝固的火山<br/>
+          <span class="text-brass-light">流淌的界江</span>
+        </h1>
+
+        <p class="reveal reveal-d3 mt-8 text-cream/80 text-base md:text-lg leading-[1.9] max-w-2xl font-light">
+          从北京启程，穿越五大连池的亿年熔岩、嘉荫的中俄界碑、伊春的红松氧吧，抵达黑河的百年风云。<br class="hidden md:block"/>
+          13 天，5 城，一场属于 10 位旅人的私享之旅。
+        </p>
+
+        <div class="reveal reveal-d4 mt-12 flex flex-col sm:flex-row gap-4">
+          <a href="/itinerary"
+             class="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-brass text-ink-deep font-medium tracking-wider hover:bg-brass-light transition-all">
+            <span>查看完整行程</span>
+            <span class="transition-transform group-hover:translate-x-1">→</span>
+          </a>
+          <a href="/destinations"
+             class="group inline-flex items-center justify-center gap-3 px-8 py-4 border border-cream/40 text-cream hover:border-brass hover:text-brass transition-all">
+            <span>浏览目的地</span>
+            <span class="transition-transform group-hover:translate-x-1">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部右下角：日期 / 团队信息 -->
+    <div class="absolute bottom-10 right-6 lg:right-10 z-10 text-right hidden md:block">
+      <div class="text-cream/50 text-[10px] tracking-[0.35em] uppercase mb-2">Private Group · 10 Travelers</div>
+      <div class="text-cream/80 font-serif text-sm tracking-wider">2026.06.28 — 07.10</div>
+      <div class="mt-3 flex items-center justify-end gap-2">
+        <span class="text-brass text-[10px]">◆</span>
+        <span class="text-cream/60 text-xs tracking-[0.25em] uppercase">Beijing · Harbin · Heihe</span>
+      </div>
+    </div>
+
+    <!-- Scroll 提示 -->
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 text-cream/60">
+      <span class="text-[10px] tracking-[0.3em] uppercase">Scroll</span>
+      <span class="w-px h-10 bg-gradient-to-b from-brass to-transparent"></span>
+    </div>
+  </section>
+
+  <!-- ============== 2. 数据条 ============== -->
+  <section class="bg-cream-deep border-y border-brass/15">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10 py-12 lg:py-16">
+      <div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-brass/20">
+        {tripStats.map((stat, idx) => (
+          <div class={`px-4 lg:px-8 text-center ${idx === 0 ? 'pl-0' : ''}`}>
+            <div class="inline-flex items-baseline gap-1">
+              <span class="font-serif text-4xl lg:text-5xl text-ink font-semibold">{stat.value}</span>
+              <span class="font-serif text-xl text-brass-dark">{stat.unit}</span>
+            </div>
+            <div class="mt-2 flex items-center justify-center gap-2">
+              <span class="h-px w-4 bg-brass"></span>
+              <span class="text-xs tracking-[0.25em] text-stone uppercase">{stat.label}</span>
+              <span class="h-px w-4 bg-brass"></span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 3. 行程主线（时间轴）============== -->
+  <section class="section-pad bg-cream relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+      <!-- 标题区 -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16 lg:mb-20">
+        <div class="lg:col-span-5">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="h-px w-8 bg-brass"></span>
+            <span class="label-eyebrow !mb-0">Itinerary · 行程主线</span>
+          </div>
+          <h2 class="font-serif text-4xl lg:text-5xl text-ink font-semibold leading-tight">
+            13 天 · 5 城<br/>
+            <span class="text-stone-light">4 大主题</span>
+          </h2>
+          <div class="brass-rule mt-8"></div>
+        </div>
+        <div class="lg:col-span-6 lg:col-start-7 flex items-end">
+          <p class="text-stone leading-[1.9] text-base">
+            从火山秘境到中俄界江，从恐龙王国到林都氧吧。每一天都是一段独立的叙事，串联起黑龙江最值得专程探访的风景。
+          </p>
+        </div>
+      </div>
+
+      <!-- 4 大主题色块 -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-14">
+        {[
+          { idx: '01', title: '火山秘境', sub: '五大连池', days: 'Day 1 - 3' },
+          { idx: '02', title: '边境恐龙', sub: '嘉荫', days: 'Day 4 - 6' },
+          { idx: '03', title: '林都氧吧', sub: '伊春', days: 'Day 7 - 10' },
+          { idx: '04', title: '界江风情', sub: '黑河', days: 'Day 11 - 13' },
+        ].map((theme) => (
+          <div class="border border-brass/30 bg-cream-deep/50 px-5 py-4">
+            <div class="text-brass-dark font-serif text-xs tracking-widest">{theme.idx}</div>
+            <div class="font-serif text-lg text-ink mt-1">{theme.title}</div>
+            <div class="text-xs text-stone tracking-wider mt-1">{theme.sub} · {theme.days}</div>
+          </div>
+        ))}
+      </div>
+
+      <!-- 时间轴：左右交替的卡片 -->
+      <div class="relative">
+        <!-- 中线 -->
+        <div class="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-brass/25 -translate-x-1/2"></div>
+
+        <div class="space-y-6 md:space-y-2">
+          {itinerary.map((day, idx) => {
+            const isLeft = idx % 2 === 0;
+            const monthDay = day.date.slice(5).replace('-', '.');
+            return (
+              <div class={`timeline-card relative md:grid md:grid-cols-2 md:gap-12 ${isLeft ? '' : 'md:[direction:rtl]'}`}>
+                {/* 卡片 */}
+                <div class={`relative ${isLeft ? 'md:pr-12 md:text-right' : 'md:pl-12 md:[direction:ltr]'} group`}>
+                  <a href="/itinerary" class="block bg-white/60 hover:bg-white border border-brass/15 hover:border-brass/40 transition-all p-5 lg:p-6 card-shadow hover:card-shadow-hover">
+                    <div class={`flex items-center gap-4 ${isLeft ? 'md:flex-row-reverse' : ''}`}>
+                      <div class="font-serif text-3xl text-brass-dark leading-none whitespace-nowrap">
+                        <span class="text-stone-light text-xs tracking-widest align-top">Day</span>
+                        <span class="ml-1">{String(day.day).padStart(2, '0')}</span>
+                      </div>
+                      <div class={`flex-1 ${isLeft ? 'md:text-right' : 'text-left'}`}>
+                        <div class="text-xs tracking-[0.2em] text-stone-light uppercase">{day.weekday} · {monthDay}</div>
+                        <div class="font-serif text-lg text-ink mt-1 leading-tight">{day.location}</div>
+                      </div>
+                    </div>
+                    <p class="mt-3 text-sm text-stone leading-relaxed">{day.oneLine}</p>
+                  </a>
+                </div>
+                {/* 中线圆点 */}
+                <div class="hidden md:block absolute left-1/2 top-8 -translate-x-1/2 z-10">
+                  <span class="timeline-dot block w-3 h-3 rounded-full bg-cream border-2 border-brass"></span>
+                </div>
+                {/* 空白占位（保持网格对齐） */}
+                <div class="hidden md:block"></div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <!-- 底部 CTA -->
+      <div class="mt-16 text-center">
+        <a href="/itinerary" class="group inline-flex items-center gap-3 text-ink hover:text-brass-dark transition-colors">
+          <span class="h-px w-12 bg-brass group-hover:w-16 transition-all"></span>
+          <span class="font-serif text-lg tracking-wider">查阅 13 天完整行程手册</span>
+          <span class="transition-transform group-hover:translate-x-1">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 4. 目的地精选 ============== -->
+  <section class="section-pad bg-cream-deep/40 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+      <div class="text-center max-w-3xl mx-auto mb-16 lg:mb-20">
+        <div class="flex items-center justify-center gap-3 mb-4">
+          <span class="h-px w-8 bg-brass"></span>
+          <span class="label-eyebrow !mb-0">Destinations · 五大目的地</span>
+          <span class="h-px w-8 bg-brass"></span>
+        </div>
+        <h2 class="font-serif text-4xl lg:text-5xl text-ink font-semibold leading-tight">
+          去到那些值得<br class="md:block"/>专程探访的地方
+        </h2>
+        <div class="brass-rule mx-auto mt-6"></div>
+      </div>
+
+      <!-- 第一行：3 列 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        {firstDest.map((dest) => (
+          <a href={`/destinations/${dest.slug}`} class="dest-card group relative overflow-hidden card-shadow block aspect-[4/5]">
+            <div class="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700" style={`background-image: url('${dest.card}');`}></div>
+            <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(15,41,41,0.15) 0%, rgba(15,41,41,0.5) 50%, rgba(15,41,41,0.92) 100%);"></div>
+            <div class="absolute inset-0 p-7 flex flex-col justify-end text-cream">
+              <div class="text-brass-light text-[10px] tracking-[0.3em] uppercase mb-2">{dest.region}</div>
+              <h3 class="font-serif text-3xl font-semibold leading-tight">{dest.name}</h3>
+              <div class="text-cream/80 text-sm tracking-wider mt-1.5">{dest.subtitle}</div>
+              <div class="h-px w-10 bg-brass my-4"></div>
+              <p class="text-cream/75 text-xs leading-relaxed line-clamp-2">{dest.tagline}</p>
+              <div class="mt-4 flex items-center gap-2 text-brass-light text-xs tracking-wider">
+                <span>查看专题</span>
+                <span class="transition-transform group-hover:translate-x-1">→</span>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <!-- 第二行：2 列 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {secondDest.map((dest) => (
+          <a href={`/destinations/${dest.slug}`} class="dest-card group relative overflow-hidden card-shadow block aspect-[16/9]">
+            <div class="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700" style={`background-image: url('${dest.card}');`}></div>
+            <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(15,41,41,0.15) 0%, rgba(15,41,41,0.45) 50%, rgba(15,41,41,0.9) 100%);"></div>
+            <div class="absolute inset-0 p-8 lg:p-10 flex flex-col justify-end text-cream">
+              <div class="text-brass-light text-[10px] tracking-[0.3em] uppercase mb-2">{dest.region}</div>
+              <h3 class="font-serif text-3xl lg:text-4xl font-semibold leading-tight">{dest.name}</h3>
+              <div class="text-cream/80 text-sm tracking-wider mt-1.5">{dest.subtitle}</div>
+              <div class="h-px w-10 bg-brass my-4"></div>
+              <p class="text-cream/75 text-sm leading-relaxed max-w-md">{dest.tagline}</p>
+              <div class="mt-4 flex items-center gap-2 text-brass-light text-xs tracking-wider">
+                <span>查看专题</span>
+                <span class="transition-transform group-hover:translate-x-1">→</span>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 5. 行程亮点 TOP 6 ============== -->
+  <section class="section-pad bg-cream">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-14 lg:mb-16">
+        <div class="lg:col-span-7">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="h-px w-8 bg-brass"></span>
+            <span class="label-eyebrow !mb-0">Highlights · 高光时刻</span>
+          </div>
+          <h2 class="font-serif text-4xl lg:text-5xl text-ink font-semibold leading-tight">
+            不容错过的核心体验
+          </h2>
+        </div>
+        <div class="lg:col-span-4 lg:col-start-9 flex items-end">
+          <p class="text-stone text-sm leading-relaxed">
+            从亿年熔岩到白垩纪化石，从花岗岩石林到中俄界江——6 个标志性时刻，定义这场旅程的灵魂。
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {highlights.map((h, idx) => (
+          <div class="group bg-white border border-brass/15 hover:border-brass/40 transition-all card-shadow card-shadow-hover overflow-hidden">
+            <a href="/itinerary" class="block">
+              <div class="relative aspect-[4/3] overflow-hidden bg-ink-deep">
+                <img src={h.image} alt={h.name} loading="lazy"
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
+                <div class="absolute inset-0" style="background: linear-gradient(180deg, transparent 50%, rgba(15,41,41,0.55) 100%);"></div>
+                <div class="absolute top-4 left-4 px-3 py-1 bg-ink-deep/80 backdrop-blur-sm border border-brass/40">
+                  <span class="text-brass-light text-[10px] tracking-[0.2em] uppercase">Day {String(h.day).padStart(2, '0')}</span>
+                </div>
+                <div class="absolute top-4 right-4 text-cream/80 font-serif text-2xl">
+                  <span class="text-brass-light/80 text-xs">No.</span>{String(idx + 1).padStart(2, '0')}
+                </div>
+              </div>
+              <div class="p-6">
+                <div class="text-xs text-brass-dark tracking-[0.25em] uppercase mb-2">{h.destination}</div>
+                <h3 class="font-serif text-xl text-ink leading-tight">{h.name}</h3>
+                <div class="h-px w-8 bg-brass my-3"></div>
+                <p class="text-sm text-stone leading-relaxed">{h.description}</p>
+              </div>
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 6. 美食亮点 ============== -->
+  <section class="section-pad bg-cream-deep/40 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+      <div class="text-center max-w-3xl mx-auto mb-14 lg:mb-16">
+        <div class="flex items-center justify-center gap-3 mb-4">
+          <span class="h-px w-8 bg-brass"></span>
+          <span class="label-eyebrow !mb-0">Cuisine · 舌尖记忆</span>
+          <span class="h-px w-8 bg-brass"></span>
+        </div>
+        <h2 class="font-serif text-4xl lg:text-5xl text-ink font-semibold leading-tight">
+          矿泉鱼 · 江鱼宴 · 东北硬菜
+        </h2>
+        <div class="brass-rule mx-auto mt-6"></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {featuredDishes.map((dish) => (
+          <div class="group bg-cream border border-brass/15 hover:border-brass/40 transition-all card-shadow card-shadow-hover overflow-hidden flex">
+            <div class="w-1/3 relative overflow-hidden bg-ink-deep">
+              <img src={dish.image} alt={dish.name} loading="lazy"
+                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"/>
+            </div>
+            <div class="w-2/3 p-5">
+              <div class="text-[10px] text-brass-dark tracking-[0.25em] uppercase mb-1">{dish.area}</div>
+              <h3 class="font-serif text-lg text-ink leading-tight">{dish.name}</h3>
+              <div class="h-px w-6 bg-brass my-2.5"></div>
+              <p class="text-xs text-stone leading-relaxed line-clamp-3">{dish.description}</p>
+              {dish.signature && (
+                <div class="mt-3 flex flex-wrap gap-1.5">
+                  {dish.signature.slice(0, 2).map((s) => (
+                    <span class="text-[10px] text-stone-light border border-brass/25 px-1.5 py-0.5">{s}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 7. 行程要素 ============== -->
+  <section class="section-pad bg-cream">
+    <div class="max-w-7xl mx-auto px-6 lg:px-10">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <!-- 左侧标题 -->
+        <div class="lg:col-span-5">
+          <div class="lg:sticky lg:top-32">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="h-px w-8 bg-brass"></span>
+              <span class="label-eyebrow !mb-0">Package · 行程要素</span>
+            </div>
+            <h2 class="font-serif text-4xl lg:text-5xl text-ink font-semibold leading-tight">
+              细节成就旅程
+            </h2>
+            <div class="brass-rule mt-8"></div>
+            <p class="mt-6 text-stone leading-[1.9] text-sm">
+              从交通、住宿到用餐与特色体验，每一项都为 10 人精品小团精心设计，确保整段旅程的私密、舒适与深度。
+            </p>
+            <div class="mt-10">
+              <a href="/itinerary"
+                 class="group inline-flex items-center gap-3 px-7 py-3.5 bg-ink text-cream hover:bg-ink-deep transition-colors">
+                <span class="font-serif tracking-wider">下载完整手册</span>
+                <span class="text-brass-light transition-transform group-hover:translate-x-1">→</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧：要素列表 -->
+        <div class="lg:col-span-7">
+          <div class="bg-white border border-brass/15 card-shadow">
+            {packageInfo.map((item, idx) => (
+              <div class={`flex items-start justify-between gap-6 px-6 lg:px-8 py-6 ${idx !== packageInfo.length - 1 ? 'border-b border-brass/15' : ''}`}>
+                <div class="flex-1">
+                  <div class="text-[10px] text-brass-dark tracking-[0.3em] uppercase mb-1.5">No. {String(idx + 1).padStart(2, '0')}</div>
+                  <div class="text-sm text-stone tracking-wider">{item.label}</div>
+                </div>
+                <div class="text-right max-w-[60%]">
+                  <div class="font-serif text-base lg:text-lg text-ink leading-snug">{item.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 8. 底部 CTA 区 ============== -->
+  <section class="relative overflow-hidden bg-ink-deep">
+    <!-- 黄铜装饰线 -->
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brass to-transparent opacity-50"></div>
+    <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brass to-transparent opacity-30"></div>
+
+    <!-- 装饰角标 -->
+    <div class="absolute top-12 left-6 lg:left-10 text-brass/40 font-serif text-xs tracking-[0.4em] uppercase">
+      ◆ Beyond Travel
+    </div>
+    <div class="absolute top-12 right-6 lg:right-10 text-brass/40 font-serif text-xs tracking-[0.4em] uppercase">
+      13 Days · 2026 ◆
+    </div>
+
+    <div class="max-w-5xl mx-auto px-6 lg:px-10 py-28 lg:py-36 text-center">
+      <div class="flex items-center justify-center gap-3 mb-8">
+        <span class="h-px w-12 bg-brass"></span>
+        <span class="text-brass-light text-xs tracking-[0.4em] uppercase">The Journey Begins Here</span>
+        <span class="h-px w-12 bg-brass"></span>
+      </div>
+
+      <h2 class="font-serif text-cream text-4xl md:text-5xl lg:text-6xl font-semibold leading-[1.2] tracking-tight">
+        让这次旅程，<br/>
+        <span class="text-brass-light">从这份方案开始</span>
+      </h2>
+
+      <p class="mt-8 text-cream/70 text-base lg:text-lg leading-relaxed tracking-wider">
+        13 天 · 5 城 · 10 人精品团<br class="md:hidden"/>
+        <span class="text-brass-light/70 mx-2">·</span>
+        2026.06.28 — 07.10
+      </p>
+
+      <div class="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/itinerary"
+           class="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-brass text-ink-deep font-medium tracking-wider hover:bg-brass-light transition-all">
+          <span>查看完整行程</span>
+          <span class="transition-transform group-hover:translate-x-1">→</span>
+        </a>
+        <a href="/guide"
+           class="group inline-flex items-center justify-center gap-3 px-8 py-4 border border-cream/30 text-cream hover:border-brass hover:text-brass-light transition-all">
+          <span>实用信息中心</span>
+          <span class="transition-transform group-hover:translate-x-1">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
